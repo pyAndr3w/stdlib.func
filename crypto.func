@@ -98,10 +98,15 @@ int        keccak256_from_snake(slice snake) asm "CONT:<{ WHILE:<{ DUP SREFS }>D
 ;;; Returns:
 ;;;   builder: The builder with the hash appended.
 builder store_sha256_from_snake(builder b, slice snake)    asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH DEC HASHEXTA_SHA256 }> 2 1 CALLXARGS";
+(builder, ()) ~store_sha256_from_snake(builder b, slice snake)    asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH DEC HASHEXTA_SHA256 }> 2 1 CALLXARGS";
 builder store_sha512_from_snake(builder b, slice snake)    asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH DEC HASHEXTA_SHA512 }> 2 1 CALLXARGS";
+(builder, ()) ~store_sha512_from_snake(builder b, slice snake)    asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH DEC HASHEXTA_SHA512 }> 2 1 CALLXARGS";
 builder store_blake2b_from_snake(builder b, slice snake)   asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH DEC HASHEXTA_BLAKE2B }> 2 1 CALLXARGS";
+(builder, ()) ~store_blake2b_from_snake(builder b, slice snake)   asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH DEC HASHEXTA_BLAKE2B }> 2 1 CALLXARGS";
 builder store_keccak256_from_snake(builder b, slice snake) asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH DEC HASHEXTA_KECCAK256 }> 2 1 CALLXARGS";
+(builder, ()) ~store_keccak256_from_snake(builder b, slice snake) asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH DEC HASHEXTA_KECCAK256 }> 2 1 CALLXARGS";
 builder store_keccak512_from_snake(builder b, slice snake) asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH DEC HASHEXTA_KECCAK512 }> 2 1 CALLXARGS";
+(builder, ()) ~store_keccak512_from_snake(builder b, slice snake) asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH DEC HASHEXTA_KECCAK512 }> 2 1 CALLXARGS";
 
 
 ;; ███████╗██╗ ██████╗ ███╗   ██╗ █████╗ ████████╗██╗   ██╗██████╗ ███████╗███████╗

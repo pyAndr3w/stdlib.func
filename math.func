@@ -76,6 +76,7 @@ int abs(int x) asm "ABS";
 ;;;
 ;;; Returns:
 ;;;   int: The original integer x if it is 0 or -1.
+int force_bool(int x) asm "CHKBOOL";
 (int, ()) ~force_bool(int x) asm "CHKBOOL";
 
 ;;; Computes the integer square root of a non-negative integer x using a binary search like algorithm.

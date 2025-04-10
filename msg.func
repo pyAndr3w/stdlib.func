@@ -126,6 +126,7 @@ tuple parse_addr(slice s) asm "PARSEMSGADDR";
 ;;; Returns:
 ;;;   builder: Builder with addr_none appended.
 builder store_addr_none(builder b) asm "b{00} STSLICECONST";
+(builder, ()) ~store_addr_none(builder b) asm "b{00} STSLICECONST";
 
 ;;; Checks if slice contains addr_none construction.
 ;;;
@@ -163,6 +164,7 @@ int validate_addr_mc(slice addr) asm "b{10011111111} PUSHSLICE SDPPFXREV";
 ;;; Returns:
 ;;;   builder: Builder with basechain address appended.
 builder store_bc_address(builder b, int hash) asm(hash b) "b{10000000000} STSLICECONST 256 STU";
+(builder, ()) ~store_bc_address(builder b, int hash) asm(hash b) "b{10000000000} STSLICECONST 256 STU";
 
 ;;; Stores standard masterchain address to builder.
 ;;;
@@ -173,6 +175,7 @@ builder store_bc_address(builder b, int hash) asm(hash b) "b{10000000000} STSLIC
 ;;; Returns:
 ;;;   builder: Builder with masterchain address appended.
 builder store_mc_address(builder b, int hash) asm(hash b) "b{10011111111} STSLICECONST 256 STU";
+(builder, ()) ~store_mc_address(builder b, int hash) asm(hash b) "b{10011111111} STSLICECONST 256 STU";
 
 ;;; Validates if slice contains a standard basechain address without anycast.
 ;;;
@@ -250,6 +253,7 @@ int masterchain_addr?(slice addr) asm "REWRITESTDADDR DROP -1 EQINT";
 ;;; Returns:
 ;;;   builder: Builder with StateInit appended.
 builder store_state_init(builder b, cell data, cell code) asm(data code b) "b{00110} STSLICECONST STREF STREF";
+(builder, ()) ~store_state_init(builder b, cell data, cell code) asm(data code b) "b{00110} STSLICECONST STREF STREF";
 
 
 ;; ███╗   ███╗███████╗███████╗███████╗ █████╗  ██████╗ ███████╗███████╗
@@ -274,6 +278,7 @@ const slice NON_BOUNCEABLE = "42_"s; ;; 0b010000 tag - 0, ihr_disabled - 1, boun
 ;;; Returns:
 ;;;   builder: Builder with flags appended.
 builder store_msg_flags(builder b, int flag) asm(flag b) "6 STU";
+(builder, ()) ~store_msg_flags(builder b, int flag) asm(flag b) "6 STU";
 
 ;;; Stores bounceable message flags to builder.
 ;;;
@@ -283,6 +288,7 @@ builder store_msg_flags(builder b, int flag) asm(flag b) "6 STU";
 ;;; Returns:
 ;;;   builder: Builder with bounceable flags appended.
 builder store_msg_flags_bounceable(builder b) asm "b{011000} STSLICECONST";
+(builder, ()) ~store_msg_flags_bounceable(builder b) asm "b{011000} STSLICECONST";
 
 ;;; Stores non-bounceable message flags to builder.
 ;;;
@@ -292,6 +298,7 @@ builder store_msg_flags_bounceable(builder b) asm "b{011000} STSLICECONST";
 ;;; Returns:
 ;;;   builder: Builder with non-bounceable flags appended.
 builder store_msg_flags_non_bounceable(builder b) asm "b{010000} STSLICECONST";
+(builder, ()) ~store_msg_flags_non_bounceable(builder b) asm "b{010000} STSLICECONST";
 
 ;;; Loads message flags from slice.
 ;;;
@@ -301,7 +308,7 @@ builder store_msg_flags_non_bounceable(builder b) asm "b{010000} STSLICECONST";
 ;;; Returns:
 ;;;   slice: Remainder of the slice.
 ;;;   int: Loaded flags value.
-(slice, int) ~load_msg_flags(slice s) asm(-> 1 0) "4 LDU";
+(slice, int) load_msg_flags(slice s) asm(-> 1 0) "4 LDU";
 
 ;;; Parses full message cell into components.
 ;;;
@@ -340,6 +347,7 @@ int bounced?(int flags) asm "ONE AND";
 ;;;
 ;;; Returns:
 ;;;   slice: Remainder of the slice after skipping the bounced prefix.
+slice skip_bounced_prefix(slice s) asm "x{FFFFFFFF} SDBEGINS";
 (slice, ()) ~skip_bounced_prefix(slice s) asm "x{FFFFFFFF} SDBEGINS";
 
 ;; ===== MSG BODY =====
@@ -353,6 +361,7 @@ int bounced?(int flags) asm "ONE AND";
 ;;; Returns:
 ;;;   builder: Builder with operation code appended.
 builder store_op(builder b, int op) asm(op b) "32 STU";
+(builder, ()) ~store_op(builder b, int op) asm(op b) "32 STU";
 
 ;;; Stores query ID to builder.
 ;;;
@@ -363,6 +372,7 @@ builder store_op(builder b, int op) asm(op b) "32 STU";
 ;;; Returns:
 ;;;   builder: Builder with query ID appended.
 builder store_query_id(builder b, int query_id) asm(query_id b) "64 STU";
+(builder, ()) ~store_query_id(builder b, int query_id) asm(query_id b) "64 STU";
 
 ;;; Loads operation code from slice.
 ;;;
@@ -393,6 +403,7 @@ builder store_query_id(builder b, int query_id) asm(query_id b) "64 STU";
 ;;;   slice: Remainder of the slice.
 ;;;   int: 32-bit operation code.
 ;;;   int: 64-bit query ID.
+(slice, int, int) load_op_and_query_id(slice s) asm(-> 2 0 1) "32 LDU 64 LDU";
 (slice, (int, int)) ~load_op_and_query_id(slice s) asm(-> 2 0 1) "32 LDU 64 LDU";
 
 ;;; Skips operation code in slice.
@@ -402,6 +413,7 @@ builder store_query_id(builder b, int query_id) asm(query_id b) "64 STU";
 ;;;
 ;;; Returns:
 ;;;   slice: Remainder of the slice after skipping the operation code.
+slice skip_op(slice s) asm "32 LDU NIP";
 (slice, ()) ~skip_op(slice s) asm "32 LDU NIP";
 
 ;;; Skips query ID in slice.
@@ -411,6 +423,7 @@ builder store_query_id(builder b, int query_id) asm(query_id b) "64 STU";
 ;;;
 ;;; Returns:
 ;;;   slice: Remainder of the slice after skipping the query ID.
+slice skip_query_id(slice s) asm "64 LDU NIP";
 (slice, ()) ~skip_query_id(slice s) asm "64 LDU NIP";
 
 

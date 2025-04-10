@@ -20,6 +20,10 @@
 -}
 
 
+#include "boc.func";
+#include "dict.func";
+
+
 ;; ===== STANDARD OPERATIONS =====
 
 ;; Common (used in TEP-62,74,85)
