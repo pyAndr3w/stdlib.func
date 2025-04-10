@@ -1,6 +1,6 @@
 # stdlib.func: The Standard Library for FunC
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](LICENSE.LGPL)
 
 ## Overview
 
@@ -27,7 +27,8 @@ The library is organized into several `.func` files, each focusing on a specific
 
 ```
 stdlib.func/
-├── LICENSE           # MIT License file
+├── LICENSE.GPL       # GNU General Public License v3.0 text
+├── LICENSE.LGPL      # GNU Lesser General Public License v3.0 text (or just LICENSE)
 ├── README.md         # This file
 ├── blockchain.func   # Blockchain interaction primitives
 ├── boc.func          # Cell, Slice, Builder operations (Bag of Cells)
@@ -82,8 +83,10 @@ Contributions are welcome! If you find a bug, have a feature request, or want to
 1.  Open an issue on the repository's issue tracker.
 2.  Fork the repository, make your changes, and submit a pull request.
 
-Please try to adhere to the existing coding style and documentation standards.
+Please try to adhere to the existing coding style and documentation standards. Ensure your contributions are compatible with the LGPL v3.0 license.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU Lesser General Public License v3.0 (LGPL-3.0).
+
+You can find the full text of the LGPL-3.0 license in the file [LICENSE.LGPL](LICENSE.LGPL) and the text of the GNU General Public License v3.0 (GPL-3.0), which LGPL-3.0 incorporates by reference, in the file [LICENSE.GPL](LICENSE.GPL).
