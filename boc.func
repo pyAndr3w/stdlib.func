@@ -103,6 +103,7 @@ int builder_depth(builder b) asm "BDEPTH";
 ;;; Returns:
 ;;;   builder: The modified builder.
 builder store_ref(builder b, cell c) asm(c b) "STREF";
+(builder, ()) ~store_ref(builder b, cell c) asm(c b) "STREF";
 
 ;;; Stores an optional reference to a cell in the builder.
 ;;; Stores a 1-bit prefix (0 if null, 1 otherwise) followed by the reference if it's not null.
@@ -114,6 +115,7 @@ builder store_ref(builder b, cell c) asm(c b) "STREF";
 ;;; Returns:
 ;;;   builder: The modified builder.
 builder store_maybe_ref(builder b, cell c) asm(c b) "STOPTREF";
+(builder, ()) ~store_maybe_ref(builder b, cell c) asm(c b) "STOPTREF";
 
 ;;; Appends the content (data bits and references) of one builder to another.
 ;;;
@@ -124,6 +126,7 @@ builder store_maybe_ref(builder b, cell c) asm(c b) "STOPTREF";
 ;;; Returns:
 ;;;   builder: The modified destination builder.
 builder store_builder(builder to, builder from) asm(from to) "STB";
+(builder, ()) ~store_builder(builder to, builder from) asm(from to) "STB";
 
 ;;; Finalizes the source builder into a cell and stores a reference to it in the destination builder.
 ;;;
@@ -134,6 +137,7 @@ builder store_builder(builder to, builder from) asm(from to) "STB";
 ;;; Returns:
 ;;;   builder: The modified destination builder.
 builder store_builder_as_ref(builder to, builder from) asm(from to) "STBREF";
+(builder, ()) ~store_builder_as_ref(builder to, builder from) asm(from to) "STBREF";
 
 ;;; Stores the data bits and references from a slice in a builder.
 ;;; Args:
@@ -154,6 +158,7 @@ builder store_slice(builder b, slice s) asm(s b) "STSLICE";
 ;;; Returns:
 ;;;   builder: The modified builder.
 builder store_zeroes(builder b, int x) asm "STZEROES";
+(builder, ()) ~store_zeroes(builder b, int x) asm "STZEROES";
 
 ;;; Stores a specified number of one bits into the builder.
 ;;;
@@ -164,6 +169,7 @@ builder store_zeroes(builder b, int x) asm "STZEROES";
 ;;; Returns:
 ;;;   builder: The modified builder.
 builder store_ones(builder b, int x) asm "STONES";
+(builder, ()) ~store_ones(builder b, int x) asm "STONES";
 
 ;;; Stores an integer using VarUInteger 16 encoding.
 ;;; The value must be in the range 0..2^120-1.
@@ -175,6 +181,7 @@ builder store_ones(builder b, int x) asm "STONES";
 ;;; Returns:
 ;;;   builder: The modified builder.
 builder store_varuint16(builder b, int x) asm "STVARUINT16";
+(builder, ()) ~store_varuint16(builder b, int x) asm "STVARUINT16";
 
 ;;; Stores an integer using VarInteger 16 encoding.
 ;;; The value must be in the range -2^119..2^119-1.
@@ -186,6 +193,7 @@ builder store_varuint16(builder b, int x) asm "STVARUINT16";
 ;;; Returns:
 ;;;   builder: The modified builder.
 builder store_varint16(builder b, int x) asm "STVARINT16";
+(builder, ()) ~store_varint16(builder b, int x) asm "STVARINT16";
 
 ;;; Stores an integer using VarUInteger 32 encoding.
 ;;; The value must be in the range 0..2^248-1.
@@ -197,6 +205,7 @@ builder store_varint16(builder b, int x) asm "STVARINT16";
 ;;; Returns:
 ;;;   builder: The modified builder.
 builder store_varuint32(builder b, int x) asm "STVARUINT32";
+(builder, ()) ~store_varuint32(builder b, int x) asm "STVARUINT32";
 
 ;;; Stores an integer using VarInteger 32 encoding.
 ;;; The value must be in the range -2^247..2^247-1.
@@ -208,6 +217,7 @@ builder store_varuint32(builder b, int x) asm "STVARUINT32";
 ;;; Returns:
 ;;;   builder: The modified builder.
 builder store_varint32(builder b, int x) asm "STVARINT32";
+(builder, ()) ~store_varint32(builder b, int x) asm "STVARINT32";
 
 ;;; Stores a non-negative integer amount of coins (Grams).
 ;;; Alias for store_varuint16.
@@ -219,7 +229,9 @@ builder store_varint32(builder b, int x) asm "STVARINT32";
 ;;; Returns:
 ;;;   builder: The modified builder.
 builder store_grams(builder b, int x) asm "STGRAMS";
+(builder, ()) ~store_grams(builder b, int x) asm "STGRAMS";
 builder store_coins(builder b, int x) asm "STGRAMS";
+(builder, ()) ~store_coins(builder b, int x) asm "STGRAMS";
 
 ;;; Stores a single '1' bit, representing boolean true.
 ;;;
@@ -229,6 +241,7 @@ builder store_coins(builder b, int x) asm "STGRAMS";
 ;;; Returns:
 ;;;   builder: The modified builder.
 builder store_true(builder b) asm "STONE";
+(builder, ()) ~store_true(builder b) asm "STONE";
 
 ;;; Stores a single '0' bit, representing boolean false.
 ;;;
@@ -238,6 +251,7 @@ builder store_true(builder b) asm "STONE";
 ;;; Returns:
 ;;;   builder: The modified builder.
 builder store_false(builder b) asm "STZERO";
+(builder, ()) ~store_false(builder b) asm "STZERO";
 
 ;;; Stores a single bit representing a boolean value (0 for false, -1 for true).
 ;;;
@@ -248,6 +262,7 @@ builder store_false(builder b) asm "STZERO";
 ;;; Returns:
 ;;;   builder: The modified builder.
 builder store_bool(builder b, int x) asm(x b) "1 STI";
+(builder, ()) ~store_bool(builder b, int x) asm(x b) "1 STI";
 
 ;;; Stores an integer as a string of its decimal representation (UTF-8 encoded) in the builder.
 ;;;
@@ -271,6 +286,20 @@ builder store_number_dec(builder b, int x) asm """
   DROP
   REPEAT:<{ 8 STU }>                                          // ..rrr.. b i
 """;
+(builder, ()) ~store_number_dec(builder b, int x) asm """
+  ZERO                                                        // b x i=0
+  SWAP                                                        // b i=0 x
+  UNTIL:<{                                                    // b i x
+    10 PUSHINT DIVMOD                                         // b i x r
+    48 ADDCONST                                               // b i x r
+    s3 s1 s3 XCHG3                                            // r b x i
+    INC                                                       // r b x i
+    s1 s0 XCPU                                                // r b i x x
+    ISZERO
+  }>
+  DROP
+  REPEAT:<{ 8 STU }>                                          // ..rrr.. b i
+""";
 
 ;;; Stores an integer as a string of its hexadecimal representation (UTF-8 encoded, uppercase) in the builder.
 ;;;
@@ -281,6 +310,20 @@ builder store_number_dec(builder b, int x) asm """
 ;;; Returns:
 ;;;   builder: The modified builder.
 builder store_number_hex(builder b, int x) asm """
+  ZERO                                                        // b x i=0
+  SWAP                                                        // b i=0 x
+  UNTIL:<{                                                    // b i x
+    16 PUSHINT DIVMOD                                         // b i x r
+    48 ADDCONST DUP 57 GTINT IF:<{ 7 ADDCONST }>              // b i x r
+    s3 s1 s3 XCHG3                                            // r b x i
+    INC                                                       // r b x i
+    s1 s0 XCPU                                                // r b i x x
+    ISZERO
+  }>
+  DROP
+  REPEAT:<{ 8 STU }>                                          // ..rrr.. b i
+""";
+(builder, ()) ~store_number_hex(builder b, int x) asm """
   ZERO                                                        // b x i=0
   SWAP                                                        // b i=0 x
   UNTIL:<{                                                    // b i x
@@ -435,6 +478,7 @@ cell preload_ref(slice s) asm "PLDREF";
 ;;;
 ;;; Returns:
 ;;;   slice: The remaining part of the slice.
+slice skip_ref(slice s) asm "LDREF NIP";
 (slice, ()) ~skip_ref(slice s) asm "LDREF NIP";
 
 ;;; Loads the first cell reference from the slice and converts it to a slice for parsing.
@@ -506,7 +550,9 @@ cell preload_ref(slice s) asm "PLDREF";
 ;;;
 ;;; Returns:
 ;;;   slice: The remaining slice.
+slice skip_grams(slice s) asm "LDGRAMS NIP";
 (slice, ()) ~skip_grams(slice s) asm "LDGRAMS NIP";
+slice skip_coins(slice s) asm "LDGRAMS NIP";
 (slice, ()) ~skip_coins(slice s) asm "LDGRAMS NIP";
 
 ;;; Loads a sequence of leading zero bits and returns their count.
@@ -604,6 +650,7 @@ cell preload_maybe_ref(slice s) asm "PLDOPTREF";
 ;;;
 ;;; Returns:
 ;;;   slice: The remaining slice.
+slice skip_maybe_ref(slice s) asm "SKIPOPTREF";
 (slice, ()) ~skip_maybe_ref(slice s) asm "SKIPOPTREF";
 
 ;;; Loads a single bit and interprets it as a boolean value (-1 for true, 0 for false).

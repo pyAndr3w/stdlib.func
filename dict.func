@@ -42,6 +42,7 @@ int dict_empty?(cell c) asm "DICTEMPTY";
 ;;; Returns:
 ;;;   builder: Resulting builder with the dictionary stored.
 builder store_dict(builder b, cell c) asm(c b) "STDICT";
+(builder, ()) ~store_dict(builder b, cell c) asm(c b) "STDICT";
 
 ;;; Loads (parses) a dictionary (maybe Cell) from a slice.
 ;;;
