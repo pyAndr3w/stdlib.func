@@ -1,0 +1,81 @@
+{-
+    This file is part of stdlib.func.
+    It is derived from code originally part of the TON Blockchain project.
+
+    stdlib.func is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    stdlib.func is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with stdlib.func (see the file LICENSE.LGPL). If not, see
+    <https://www.gnu.org/licenses/>. You should also have received a copy of
+    the GNU General Public License (see the file LICENSE.GPL), which is
+    referenced by the LGPL.
+-}
+
+
+;; ===== STANDARD OPERATIONS =====
+
+;; Common (used in TEP-62,74,85)
+const slice op::excesses               = "d53276db"s;
+
+;; TEP-62 - NFT
+;; https://github.com/ton-blockchain/TEPs/blob/master/text/0062-nft-standard.md
+const slice op::transfer_nft           = "5fcc3d14"s;
+const slice op::ownership_assigned     = "05138d91"s;
+const slice op::get_static_data        = "2fcb26a2"s;
+const slice op::report_static_data     = "8b771735"s;
+
+;; TEP-66 - NFT Royalty
+;; https://github.com/ton-blockchain/TEPs/blob/master/text/0066-nft-royalty-standard.md
+const slice op::get_royalty_params     = "693d3950"s;
+const slice op::report_royalty_params  = "a8cb00ad"s;
+
+;; TEP-74 - Jettons
+;; https://github.com/ton-blockchain/TEPs/blob/master/text/0074-jettons-standard.md
+const slice op::transfer_jetton        = "0f8a7ea5"s;
+const slice op::internal_transfer      = "178d4519"s;
+const slice op::transfer_notification  = "7362d09c"s;
+const slice op::burn_notification      = "7bdd97de"s;
+
+;; TEP-85 - SBT
+;; https://github.com/ton-blockchain/TEPs/blob/master/text/0085-sbt-standard.md
+const slice op::prove_ownership        = "04ded148"s;
+const slice op::ownership_proof        = "0524c7ae"s;
+const slice op::request_owner          = "d0c3bfea"s;
+const slice op::owner_info             = "0dd607e3"s;
+const slice op::destroy_sbt            = "1f04537a"s;
+const slice op::revoke_sbt             = "6f89f5e3"s;
+
+;; TEP-89 - Discoverable Jettons Wallets
+;; https://github.com/ton-blockchain/TEPs/blob/master/text/0089-jetton-wallet-discovery.md
+const slice op::provide_wallet_address = "2c76b973"s;
+const slice op::take_wallet_address    = "d1735400"s;
+
+
+;; ===== TOKEN METADATA =====
+
+;; https://github.com/ton-blockchain/TEPs/blob/master/text/0064-token-data-standard.md
+
+const slice ONCHAIN_CONTENT = "00"s;
+const slice OFFCHAIN_CONTENT = "01"s;
+const slice SNAKE_FORMAT = "00"s;
+const slice CHUNKS_FORMAT = "01"s;
+
+;; Key is sha256 hash of string. Value is data encoded as described in "Data serialization" paragraph.
+;; Snake format - must be prefixed with 0x00 byte
+(cell, ()) ~set_token_snake_metadata_entry(cell content_dict, int key, slice value) impure {
+    content_dict~udict_set_ref(256, key, begin_cell().store_slice(SNAKE_FORMAT).store_slice(value).end_cell());
+    return (content_dict, ());
+}
+
+;; On-chain content layout The first byte is 0x00 and the rest is key/value dictionary.
+cell create_token_onchain_metadata(cell content_dict) inline {
+    return begin_cell().store_slice(ONCHAIN_CONTENT).store_dict(content_dict).end_cell();
+}

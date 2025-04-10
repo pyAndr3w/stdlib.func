@@ -1,0 +1,272 @@
+{-
+    This file is part of stdlib.func.
+    It is derived from code originally part of the TON Blockchain project.
+
+    stdlib.func is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    stdlib.func is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with stdlib.func (see the file LICENSE.LGPL). If not, see
+    <https://www.gnu.org/licenses/>. You should also have received a copy of
+    the GNU General Public License (see the file LICENSE.GPL), which is
+    referenced by the LGPL.
+-}
+
+
+{-
+  # Lisp-style lists
+
+  Lists can be represented as nested 2-elements tuples.
+  Empty list is conventionally represented as TVM `null` value (it can be obtained by calling [null()]).
+  For example, tuple `(1, (2, (3, null)))` represents list `[1, 2, 3]`. Elements of a list can be of different types.
+-}
+
+;;; Adds an element to the beginning of a lisp-style list.
+;;;
+;;; Args:
+;;;   head (X): Element to add to the beginning of the list.
+;;;   tail (tuple): Existing list to which the element will be prepended.
+;;;
+;;; Returns:
+;;;   tuple: New list with head as the first element followed by all elements from tail.
+forall X -> tuple cons(X head, tuple tail) asm "CONS";
+
+;;; Extracts the head and the tail of lisp-style list.
+;;;
+;;; Args:
+;;;   list (tuple): Lisp-style list to decompose.
+;;;
+;;; Returns:
+;;;   X: First element (head) of the list.
+;;;   tuple: Remaining elements (tail) of the list.
+forall X -> (X, tuple) uncons(tuple list) asm "UNCONS";
+
+;;; Extracts the tail and the head of lisp-style list.
+;;;
+;;; Args:
+;;;   list (tuple): Lisp-style list to decompose.
+;;;
+;;; Returns:
+;;;   (tuple, X):
+;;;     tuple: Remaining elements (tail) of the list.
+;;;     X: First element (head) of the list.
+forall X -> (tuple, X) list_next(tuple list) asm( -> 1 0) "UNCONS";
+
+;;; Returns the head of lisp-style list.
+;;;
+;;; Args:
+;;;   list (tuple): Lisp-style list to get head from.
+;;;
+;;; Returns:
+;;;   X: First element (head) of the list.
+forall X -> X car(tuple list) asm "CAR";
+
+;;; Returns the tail of lisp-style list.
+;;;
+;;; Args:
+;;;   list (tuple): Lisp-style list to get tail from.
+;;;
+;;; Returns:
+;;;   tuple: Remaining elements (tail) of the list without the first element.
+tuple cdr(tuple list) asm "CDR";
+
+;;; Creates tuple with zero elements.
+;;;
+;;; Args:
+;;;   None.
+;;;
+;;; Returns:
+;;;   tuple: Empty tuple with no elements.
+tuple empty_tuple() asm "NIL";
+
+;;; Returns the current length of the tuple.
+;;;
+;;; Args:
+;;;   t (tuple): Tuple whose length is to be determined.
+;;;
+;;; Returns:
+;;;   int: Number of elements in the tuple.
+int tuple_length(tuple t) asm "TLEN";
+
+;;; Appends a value to the end of a tuple.
+;;;
+;;; Args:
+;;;   t (tuple): Original tuple to which the value will be appended.
+;;;   value (X): Value to append to the tuple.
+;;;
+;;; Returns:
+;;;   tuple: New tuple with the value appended, but only if resulting tuple length is at most 255.
+forall X -> tuple tpush(tuple t, X value) asm "TPUSH";
+forall X -> (tuple, ()) ~tpush(tuple t, X value) asm "TPUSH";
+
+;;; Creates a tuple of length one with given argument as element.
+;;;
+;;; Args:
+;;;   x (X): Element to place in the singleton tuple.
+;;;
+;;; Returns:
+;;;   [X]: Tuple containing only the given element.
+forall X -> [X] single(X x) asm "SINGLE";
+
+;;; Unpacks a tuple of length one.
+;;;
+;;; Args:
+;;;   t ([X]): Singleton tuple to unpack.
+;;;
+;;; Returns:
+;;;   X: The element contained in the tuple.
+forall X -> X unsingle([X] t) asm "UNSINGLE";
+
+;;; Creates a tuple of length two with given arguments as elements.
+;;;
+;;; Args:
+;;;   x (X): First element of the pair.
+;;;   y (Y): Second element of the pair.
+;;;
+;;; Returns:
+;;;   [X, Y]: Tuple containing the two given elements.
+forall X, Y -> [X, Y] pair(X x, Y y) asm "PAIR";
+
+;;; Unpacks a tuple of length two.
+;;;
+;;; Args:
+;;;   t ([X, Y]): Pair tuple to unpack.
+;;;
+;;; Returns:
+;;;   X: First element of the tuple.
+;;;   Y: Second element of the tuple.
+forall X, Y -> (X, Y) unpair([X, Y] t) asm "UNPAIR";
+
+;;; Creates a tuple of length three with given arguments as elements.
+;;;
+;;; Args:
+;;;   x (X): First element of the triple.
+;;;   y (Y): Second element of the triple.
+;;;   z (Z): Third element of the triple.
+;;;
+;;; Returns:
+;;;   [X, Y, Z]: Tuple containing the three given elements.
+forall X, Y, Z -> [X, Y, Z] triple(X x, Y y, Z z) asm "TRIPLE";
+
+;;; Unpacks a tuple of length three.
+;;;
+;;; Args:
+;;;   t ([X, Y, Z]): Triple tuple to unpack.
+;;;
+;;; Returns:
+;;;   X: First element of the tuple.
+;;;   Y: Second element of the tuple.
+;;;   Z: Third element of the tuple.
+forall X, Y, Z -> (X, Y, Z) untriple([X, Y, Z] t) asm "UNTRIPLE";
+
+;;; Creates a tuple of length four with given arguments as elements.
+;;;
+;;; Args:
+;;;   x (X): First element of the tuple.
+;;;   y (Y): Second element of the tuple.
+;;;   z (Z): Third element of the tuple.
+;;;   w (W): Fourth element of the tuple.
+;;;
+;;; Returns:
+;;;   [X, Y, Z, W]: Tuple containing the four given elements.
+forall X, Y, Z, W -> [X, Y, Z, W] tuple4(X x, Y y, Z z, W w) asm "4 TUPLE";
+
+;;; Unpacks a tuple of length four.
+;;;
+;;; Args:
+;;;   t ([X, Y, Z, W]): Four-element tuple to unpack.
+;;;
+;;; Returns:
+;;;   X: First element of the tuple.
+;;;   Y: Second element of the tuple.
+;;;   Z: Third element of the tuple.
+;;;   W: Fourth element of the tuple.
+forall X, Y, Z, W -> (X, Y, Z, W) untuple4([X, Y, Z, W] t) asm "4 UNTUPLE";
+
+;;; Returns the first element of a tuple.
+;;;
+;;; Args:
+;;;   t (tuple): Tuple from which to extract the first element.
+;;;
+;;; Returns:
+;;;   X: First element of the tuple.
+forall X -> X first(tuple t) asm "FIRST";
+
+;;; Returns the second element of a tuple.
+;;;
+;;; Args:
+;;;   t (tuple): Tuple from which to extract the second element.
+;;;
+;;; Returns:
+;;;   X: Second element of the tuple.
+forall X -> X second(tuple t) asm "SECOND";
+
+;;; Returns the third element of a tuple.
+;;;
+;;; Args:
+;;;   t (tuple): Tuple from which to extract the third element.
+;;;
+;;; Returns:
+;;;   X: Third element of the tuple.
+forall X -> X third(tuple t) asm "THIRD";
+
+;;; Returns the fourth element of a tuple.
+;;;
+;;; Args:
+;;;   t (tuple): Tuple from which to extract the fourth element.
+;;;
+;;; Returns:
+;;;   X: Fourth element of the tuple.
+forall X -> X fourth(tuple t) asm "3 INDEX";
+
+;;; Returns the first element of a pair tuple.
+;;;
+;;; Args:
+;;;   p ([X, Y]): Pair tuple from which to extract the first element.
+;;;
+;;; Returns:
+;;;   X: First element of the pair.
+forall X, Y -> X pair_first([X, Y] p) asm "FIRST";
+
+;;; Returns the second element of a pair tuple.
+;;;
+;;; Args:
+;;;   p ([X, Y]): Pair tuple from which to extract the second element.
+;;;
+;;; Returns:
+;;;   Y: Second element of the pair.
+forall X, Y -> Y pair_second([X, Y] p) asm "SECOND";
+
+;;; Returns the first element of a triple tuple.
+;;;
+;;; Args:
+;;;   p ([X, Y, Z]): Triple tuple from which to extract the first element.
+;;;
+;;; Returns:
+;;;   X: First element of the triple.
+forall X, Y, Z -> X triple_first([X, Y, Z] p) asm "FIRST";
+
+;;; Returns the second element of a triple tuple.
+;;;
+;;; Args:
+;;;   p ([X, Y, Z]): Triple tuple from which to extract the second element.
+;;;
+;;; Returns:
+;;;   Y: Second element of the triple.
+forall X, Y, Z -> Y triple_second([X, Y, Z] p) asm "SECOND";
+
+;;; Returns the third element of a triple tuple.
+;;;
+;;; Args:
+;;;   p ([X, Y, Z]): Triple tuple from which to extract the third element.
+;;;
+;;; Returns:
+;;;   Z: Third element of the triple.
+forall X, Y, Z -> Z triple_third([X, Y, Z] p) asm "THIRD";
