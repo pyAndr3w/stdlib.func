@@ -135,6 +135,16 @@ builder store_builder(builder to, builder from) asm(from to) "STB";
 ;;;   builder: The modified destination builder.
 builder store_builder_as_ref(builder to, builder from) asm(from to) "STBREF";
 
+;;; Stores the data bits and references from a slice in a builder.
+;;; Args:
+;;;   b (builder): The builder to store the slice content into.
+;;;   s (slice): The slice whose content (data and refs) will be appended.
+;;;
+;;; Returns:
+;;;   builder: The modified builder with the slice content appended.
+builder store_slice(builder b, slice s) asm(s b) "STSLICE";
+(builder, ()) ~store_slice(builder b, slice s) asm(s b) "STSLICE";
+
 ;;; Stores a specified number of zero bits into the builder.
 ;;;
 ;;; Args:
