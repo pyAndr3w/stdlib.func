@@ -1,0 +1,119 @@
+;;; Computes the minimum of two integers.
+;;;
+;;; Args:
+;;;   x (int): The first integer.
+;;;   y (int): The second integer.
+;;;
+;;; Returns:
+;;;   int: The smaller of the two integers x and y.
+int min(int x, int y) asm "MIN";
+
+;;; Computes the maximum of two integers.
+;;;
+;;; Args:
+;;;   x (int): The first integer.
+;;;   y (int): The second integer.
+;;;
+;;; Returns:
+;;;   int: The larger of the two integers x and y.
+int max(int x, int y) asm "MAX";
+
+;;; Sorts two integers in ascending order.
+;;;
+;;; Args:
+;;;   x (int): The first integer.
+;;;   y (int): The second integer.
+;;;
+;;; Returns:
+;;;   int: The minimum of x and y.
+;;;   int: The maximum of x and y.
+(int, int) minmax(int x, int y) asm "MINMAX";
+
+;;; Computes the absolute value of an integer.
+;;;
+;;; Args:
+;;;   x (int): The integer.
+;;;
+;;; Returns:
+;;;   int: The absolute value (|x|) of the integer x.
+int abs(int x) asm "ABS";
+
+;;; Checks whether an integer is a "boolean value" (0 or -1).
+;;; Throws an exception if the integer is neither 0 nor -1.
+;;;
+;;; Args:
+;;;   x (int): The integer to check.
+;;;
+;;; Returns:
+;;;   int: The original integer x if it is 0 or -1.
+(int, ()) ~force_bool(int x) asm "CHKBOOL";
+
+;;; Computes the integer square root of a non-negative integer x using a binary search like algorithm.
+;;; Returns 0 if x is 0.
+;;; Uses an iterative approximation method (likely Babylonian method or similar) refined 7 times.
+;;; The final result is the largest integer r such that r*r <= x.
+;;;
+;;; Args:
+;;;   x (int): The non-negative integer for which to compute the square root.
+;;;
+;;; Returns:
+;;;   int: The integer part of the square root of x.
+int math::sqrt(int x) asm """
+  <{
+    //  x
+    DUP             // x x
+    IFNOTRET        // x
+    181 PUSHINT     // x r=181
+    s1 s1 PUSH2     // x r=181 xx xx
+    128 PUSHPOW2    // x r=181 xx xx _1=340282366920938463463374607431768211456
+    GEQ             // x r=181 xx _f
+    IF:<{           // x r=181 xx
+      128 RSHIFT#   // x r xx
+      SWAP          // x xx r
+      64 LSHIFT#    // x xx r
+      SWAP          // x r xx
+    }>              // x r xx
+    DUP             // x r xx xx
+    64 PUSHPOW2     // x r xx xx _2=18446744073709551616
+    GEQ             // x r xx _f
+    IF:<{           // x r xx
+      64 RSHIFT#    // x r xx
+      SWAP          // x xx r
+      32 LSHIFT#    // x xx r
+      SWAP          // x r xx
+    }>              // x r xx
+    DUP             // x r xx xx
+    32 PUSHPOW2     // x r xx xx _3=4294967296
+    GEQ             // x r xx _f
+    IF:<{           // x r xx
+      32 RSHIFT#    // x r xx
+      SWAP          // x xx r
+      16 LSHIFT#    // x xx r
+      SWAP          // x r xx
+    }>              // x r xx
+    DUP             // x r xx xx
+    16 PUSHPOW2     // x r xx xx _4=65536
+    GEQ             // x r xx _f
+    IF:<{           // x r xx
+      16 RSHIFT#    // x r xx
+      SWAP          // x xx r
+      8 LSHIFT#     // x xx r
+      SWAP          // x r xx
+    }>              // x r xx
+    16 PUSHPOW2     // x r xx _5=65536
+    ADD             // x r _6
+    MUL             // x r
+    18 RSHIFT#      // x r
+    {
+      2DUP          // x r x r
+      DIV           // x r _7
+      ADD           // x r
+      1 RSHIFT#     // x r
+    } 7 times
+    TUCK            // r x r
+    DIV             // r r1
+    2DUP            // r r1 r r1
+    LESS            // r r1 _f
+    -ROT CONDSELCHK // IF:<{ DROP }>ELSE<{ NIP }>
+  }>c CALLREF // equivalent to inline_ref
+""";

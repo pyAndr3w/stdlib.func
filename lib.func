@@ -1,0 +1,7 @@
+#include "boc.func";
+#include "tuples.func";
+#include "dict.func";
+#include "crypto.func";
+#include "math.func";
+#include "blockchain.func";
+#include "msg.func";

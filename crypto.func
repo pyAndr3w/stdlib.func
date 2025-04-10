@@ -1,0 +1,146 @@
+;; ██╗  ██╗ █████╗ ███████╗██╗  ██╗██╗███╗   ██╗ ██████╗ 
+;; ██║  ██║██╔══██╗██╔════╝██║  ██║██║████╗  ██║██╔════╝ 
+;; ███████║███████║███████╗███████║██║██╔██╗ ██║██║  ███╗
+;; ██╔══██║██╔══██║╚════██║██╔══██║██║██║╚██╗██║██║   ██║
+;; ██║  ██║██║  ██║███████║██║  ██║██║██║ ╚████║╚██████╔╝
+;; ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝ 
+
+;;; Computes the representation hash of a Cell.
+;;; The representation hash depends on the cell's data, references' depths, and references' representation hashes.
+;;; Useful for signing and checking signatures of arbitrary entities represented by a tree of cells.
+;;;
+;;; Args:
+;;;   c (cell): The cell to hash.
+;;;
+;;; Returns:
+;;;   int: The 256-bit representation hash (uint256).
+int cell_hash(cell c) asm "HASHCU";
+
+;;; Computes the hash of a Cell at a specific level (level 0 in this case).
+;;; For ordinary cells, the hash at level 0 is identical to the representation hash computed by HASHCU.
+;;; Often used in Merkle proof verification contexts.
+;;;
+;;; Args:
+;;;   c (cell): The cell to hash.
+;;;
+;;; Returns:
+;;;   int: The 256-bit hash at level 0 (uint256).
+int cell_zero_hash(cell c) asm "0 CHASHI";
+
+;;; Computes the hash of a Slice.
+;;; The result is the same as HASHCU on a cell containing only the slice's data and references.
+;;;
+;;; Args:
+;;;   s (slice): The slice to hash.
+;;;
+;;; Returns:
+;;;   int: The 256-bit hash (uint256).
+int slice_hash(slice s) asm "HASHSU";
+
+;;; Computes the SHA256 hash of the data bits of a Slice.
+;;; Throws an exception if the slice bit length is not divisible by 8.
+;;;
+;;; Args:
+;;;   s (slice): The slice to hash. Often represents a string.
+;;;
+;;; Returns:
+;;;   int: The 256-bit SHA256 hash (uint256).
+int string_hash(slice s) asm "SHA256U";
+
+;;; --- Hashing Snake-Formatted Data ---
+;;; Computes a cryptographic hash (SHA256, SHA512, BLAKE2b, KECCAK256, or KECCAK512)
+;;; for data serialized in the "snake format", potentially spanning multiple cells.
+;;;
+;;; Args:
+;;;   snake (slice): The initial slice containing the snake-formatted data.
+;;;
+;;; Returns:
+;;;   int or [int, int]: The computed hash. Returns a single uint256 for 256-bit hashes
+;;;                      (sha256_from_snake, keccak256_from_snake) or two uint256 for
+;;;                      512-bit hashes (sha512_from_snake, blake2b_from_snake, keccak512_from_snake).
+int        sha256_from_snake(slice snake)    asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH HASHEXT_SHA256 }> 1 1 CALLXARGS";
+[int, int] sha512_from_snake(slice snake)    asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH HASHEXT_SHA512 }> 1 1 CALLXARGS";
+[int, int] blake2b_from_snake(slice snake)   asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH HASHEXT_BLAKE2B }> 1 1 CALLXARGS";
+int        keccak256_from_snake(slice snake) asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH HASHEXT_KECCAK256 }> 1 1 CALLXARGS";
+[int, int] keccak512_from_snake(slice snake) asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH HASHEXT_KECCAK512 }> 1 1 CALLXARGS";
+
+;;; --- Storing Snake-Formatted Data Hashes ---
+;;; Computes a cryptographic hash (SHA256, SHA512, BLAKE2b, KECCAK256, or KECCAK512)
+;;; for data serialized in the "snake format" and stores the resulting hash into a builder.
+;;;
+;;; Args:
+;;;   b (builder): The builder where the computed hash will be stored.
+;;;   snake (slice): The initial slice containing the snake-formatted data.
+;;;
+;;; Returns:
+;;;   builder: The builder with the hash appended.
+builder store_sha256_from_snake(builder b, slice snake)    asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH DEC HASHEXTA_SHA256 }> 2 1 CALLXARGS";
+builder store_sha512_from_snake(builder b, slice snake)    asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH DEC HASHEXTA_SHA512 }> 2 1 CALLXARGS";
+builder store_blake2b_from_snake(builder b, slice snake)   asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH DEC HASHEXTA_BLAKE2B }> 2 1 CALLXARGS";
+builder store_keccak256_from_snake(builder b, slice snake) asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH DEC HASHEXTA_KECCAK256 }> 2 1 CALLXARGS";
+builder store_keccak512_from_snake(builder b, slice snake) asm "CONT:<{ WHILE:<{ DUP SREFS }>DO<{ LDREFRTOS }> DEPTH DEC HASHEXTA_KECCAK512 }> 2 1 CALLXARGS";
+
+;; ███████╗██╗ ██████╗ ███╗   ██╗ █████╗ ████████╗██╗   ██╗██████╗ ███████╗███████╗
+;; ██╔════╝██║██╔════╝ ████╗  ██║██╔══██╗╚══██╔══╝██║   ██║██╔══██╗██╔════╝██╔════╝
+;; ███████╗██║██║  ███╗██╔██╗ ██║███████║   ██║   ██║   ██║██████╔╝█████╗  ███████╗
+;; ╚════██║██║██║   ██║██║╚██╗██║██╔══██║   ██║   ██║   ██║██╔══██╗██╔══╝  ╚════██║
+;; ███████║██║╚██████╔╝██║ ╚████║██║  ██║   ██║   ╚██████╔╝██║  ██║███████╗███████║
+;; ╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝
+
+;;; Checks the Ed25519 signature of a hash.
+;;; Note: The hash is hashed again inside the opcode.
+;;;
+;;; Args:
+;;;   hash (int): The 256-bit hash (uint256) that was signed.
+;;;   signature (slice): The Ed25519 signature (min 512 bits).
+;;;   public_key (int): The Ed25519 public key (uint256).
+;;;
+;;; Returns:
+;;;   int: -1 if the signature is valid, 0 otherwise.
+int check_signature(int hash, slice signature, int public_key) asm "CHKSIGNU";
+
+;;; Checks the Ed25519 signature of data.
+;;; Note: The data is hashed (SHA256) inside the opcode before verification.
+;;; Throws an exception if the data slice bit length is not divisible by 8.
+;;;
+;;; Args:
+;;;   data (slice): The data that was signed.
+;;;   signature (slice): The Ed25519 signature (min 512 bits).
+;;;   public_key (int): The Ed25519 public key (uint256).
+;;;
+;;; Returns:
+;;;   int: -1 if the signature is valid, 0 otherwise.
+int check_data_signature(slice data, slice signature, int public_key) asm "CHKSIGNS";
+
+;;; Checks the secp256r1 signature of a hash.
+;;;
+;;; Args:
+;;;   hash (int): The 256-bit hash (uint256) that was signed.
+;;;   signature (slice): The secp256r1 signature (64 bytes: r, s).
+;;;   public_key (int): The secp256r1 public key (33 bytes, compressed format).
+;;;
+;;; Returns:
+;;;   int: -1 if the signature is valid, 0 otherwise.
+int check_secp256r1_signature(int hash, slice signature, int public_key) asm "P256_CHKSIGNU";
+
+;;; Checks the secp256r1 signature of data.
+;;;
+;;; Args:
+;;;   data (slice): The data that was signed.
+;;;   signature (slice): The secp256r1 signature (64 bytes: r, s).
+;;;   public_key (int): The secp256r1 public key (33 bytes, compressed format).
+;;;
+;;; Returns:
+;;;   int: -1 if the signature is valid, 0 otherwise.
+int check_secp256r1_data_signature(slice data, slice signature, int public_key) asm "P256_CHKSIGNS";
+
+;;; Checks the BLS12-381 signature of data.
+;;;
+;;; Args:
+;;;   data (slice): The data/message that was signed.
+;;;   signature (int): The BLS signature (serialized G2 element).
+;;;   public_key (int): The BLS public key (serialized G1 element).
+;;;
+;;; Returns:
+;;;   int: -1 if the signature is valid, 0 otherwise.
+int check_bls_signature(slice data, slice signature, int public_key) asm(public_key data signature) "BLS_VERIFY";

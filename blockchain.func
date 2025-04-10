@@ -1,0 +1,560 @@
+
+;;  ██████╗  █████╗ ███████╗        ██╗    ███████╗███████╗███████╗███████╗
+;; ██╔════╝ ██╔══██╗██╔════╝       ██╔╝    ██╔════╝██╔════╝██╔════╝██╔════╝
+;; ██║  ███╗███████║███████╗      ██╔╝     █████╗  █████╗  █████╗  ███████╗
+;; ██║   ██║██╔══██║╚════██║     ██╔╝      ██╔══╝  ██╔══╝  ██╔══╝  ╚════██║
+;; ╚██████╔╝██║  ██║███████║    ██╔╝       ██║     ███████╗███████╗███████║
+;;  ╚═════╝ ╚═╝  ╚═╝╚══════╝    ╚═╝        ╚═╝     ╚══════╝╚══════╝╚══════╝
+
+
+;;; Accepts the incoming message, setting the gas limit to its maximum allowed value.
+;;; Resets the gas credit to zero, effectively paying for gas consumed so far and ensuring
+;;; the transaction has enough gas to proceed. Crucial for processing external messages.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   None
+() accept_message() impure asm "ACCEPT";
+
+;;; Sets the gas limit to the minimum of the provided limit and the maximum allowed gas.
+;;; Resets the gas credit to zero. Throws an out-of-gas exception if gas consumed already exceeds the new limit.
+;;; Note: Using a very large limit (≥ 2^63 - 1) is equivalent to accept_message().
+;;;
+;;; Args:
+;;;   limit (int): The desired gas limit.
+;;;
+;;; Returns:
+;;;   None
+() set_gas_limit(int limit) impure asm "SETGASLIMIT";
+
+;;; Retrieves the current total storage fee collected during the storage phase.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   int: The accumulated storage fees in nanoTONs.
+int storage_fees() asm "STORAGEFEES";
+
+;;; Returns the amount of gas consumed by the VM execution up to this point in the current transaction.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   int: Gas consumed so far.
+int gas_consumed() asm "GASCONSUMED";
+
+;;; Calculates the computation fee in nanoTONs for a transaction based on gas usage and workchain.
+;;; Retrieves pricing data from the blockchain configuration.
+;;;
+;;; Args:
+;;;   workchain (int): The workchain ID (0 for basechain, -1 for masterchain).
+;;;   gas_used (int): The amount of gas consumed.
+;;;
+;;; Returns:
+;;;   int: The estimated compute fee in nanoTONs.
+int get_compute_fee(int workchain, int gas_used) asm(gas_used workchain) "GETGASFEE";
+
+;;; Calculates the storage fee in nanoTONs based on contract data size and storage duration.
+;;; Uses current storage pricing from the blockchain configuration.
+;;;
+;;; Args:
+;;;   workchain (int): The workchain ID.
+;;;   seconds (int): Storage duration in seconds.
+;;;   bits (int): Total number of bits stored.
+;;;   cells (int): Total number of cells stored (with deduplication).
+;;;
+;;; Returns:
+;;;   int: The estimated storage fee in nanoTONs.
+int get_storage_fee(int workchain, int seconds, int bits, int cells) asm(cells bits seconds workchain) "GETSTORAGEFEE";
+
+;;; Calculates the forward fee in nanoTONs for sending a message based on its size.
+;;; Considers deduplication and root-is-not-counted rules when measuring message size.
+;;;
+;;; Args:
+;;;   workchain (int): The workchain ID (is_mc flag - true if source or destination is in masterchain).
+;;;   bits (int): Total number of bits in the message.
+;;;   cells (int): Total number of cells in the message.
+;;;
+;;; Returns:
+;;;   int: The estimated forwarding fee in nanoTONs.
+int get_forward_fee(int workchain, int bits, int cells) asm(cells bits workchain) "GETFORWARDFEE";
+
+;;; Returns the gas consumed by precompiled/native functions.
+;;; Currently returns null. Will return cost of contract execution in gas units if the contract is precompiled.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   int: Gas consumed by precompiled operations or null.
+int get_precompiled_gas_consumption() asm "GETPRECOMPILEDGAS";
+
+;;; Calculates the simplified compute fee without the flat price component.
+;;; Computes (gas_used * price) / 2^16 for additional gas consumption.
+;;;
+;;; Args:
+;;;   workchain (int): The workchain ID.
+;;;   gas_used (int): The amount of gas consumed.
+;;;
+;;; Returns:
+;;;   int: The simplified compute fee in nanoTONs.
+int get_simple_compute_fee(int workchain, int gas_used) asm(gas_used workchain) "GETGASFEESIMPLE";
+
+;;; Calculates the simplified forward fee without the lump price component.
+;;; Computes (bits*bit_price + cells*cell_price) / 2^16 for additional message size.
+;;;
+;;; Args:
+;;;   workchain (int): The workchain ID.
+;;;   bits (int): Total number of bits in the message.
+;;;   cells (int): Total number of cells in the message.
+;;;
+;;; Returns:
+;;;   int: The simplified forwarding fee in nanoTONs.
+int get_simple_forward_fee(int workchain, int bits, int cells) asm(cells bits workchain) "GETFORWARDFEESIMPLE";
+
+;;; Calculates the original forward fee from a potentially modified fee value.
+;;; Computes fwd_fee * 2^16 / first_frac to get the original fee from the parsed message fee.
+;;;
+;;; Args:
+;;;   workchain (int): The workchain ID.
+;;;   fwd_fee (int): A forwarding fee value (potentially adjusted).
+;;;
+;;; Returns:
+;;;   int: The original forwarding fee in nanoTONs.
+int get_original_fwd_fee(int workchain, int fwd_fee) asm(fwd_fee workchain) "GETORIGINALFWDFEE";
+
+;;; Retrieves the amount currently due for contract storage payment.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   int: Amount due for storage in nanoTONs.
+int my_storage_due() asm "DUEPAYMENT";
+
+;;; Returns a tuple containing various fee-related configuration parameters from the blockchain config.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   tuple: A tuple holding fee configuration parameters.
+tuple get_fee_configs() asm "UNPACKEDCONFIGTUPLE";
+
+
+;;  ██████╗ ██████╗ ███╗   ██╗███████╗██╗ ██████╗
+;; ██╔════╝██╔═══██╗████╗  ██║██╔════╝██║██╔════╝
+;; ██║     ██║   ██║██╔██╗ ██║█████╗  ██║██║  ███╗
+;; ██║     ██║   ██║██║╚██╗██║██╔══╝  ██║██║   ██║
+;; ╚██████╗╚██████╔╝██║ ╚████║██║     ██║╚██████╔╝
+;;  ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝     ╚═╝ ╚═════╝
+
+
+;;; Returns the Unix timestamp of the current block.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   int: Current block's Unix timestamp.
+int now() asm "NOW";
+
+;;; Returns the logical time (lt) of the current block's begin time.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   int: Logical time of the block start.
+int block_lt() asm "BLOCKLT";
+
+;;; Returns the logical time (lt) of the current transaction.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   int: Logical time of the transaction.
+int cur_lt() asm "LTIME";
+
+;;; Returns the current balance of the smart contract in nanoTONs and a dictionary of extra currency balances.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   [int, cell]:
+;;;     int: Balance in nanoTONs.
+;;;     cell: Dictionary mapping currency IDs to balances.
+[int, cell] get_balance() asm "BALANCE";
+
+;;; Returns only the nanoTON balance of the smart contract.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   int: Balance in nanoTONs.
+int get_ton_balance() asm "BALANCE FIRST";
+
+;;; Returns the balance of a specific extra currency held by the contract.
+;;;
+;;; Args:
+;;;   id (int): The ID of the extra currency.
+;;;
+;;; Returns:
+;;;   int: Balance of the specified extra currency.
+int get_extra_balance(int id) asm "GETEXTRABALANCE";
+
+;;; Returns the internal address of the current smart contract as a slice.
+;;; Can be further parsed using functions like parse_std_addr.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   slice: The contract's address slice.
+slice my_address() asm "MYADDR";
+
+;;; Returns the code cell of the current smart contract.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   cell: The contract's code cell.
+cell my_code() asm "MYCODE";
+
+;;; Returns information about previous blocks in the shardchain and masterchain.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   [tuple, tuple]:
+;;;     tuple: Tuple containing last_mc_blocks (last 16 masterchain blocks).
+;;;     tuple: Tuple containing prev_key_block information.
+[tuple, tuple] get_prev_blocks() asm "PREVBLOCKSINFOTUPLE";
+
+;;; Returns a tuple containing information about the last 16 masterchain blocks.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   tuple: Tuple with info on the last 16 MC blocks.
+tuple get_last_mc_blocks() asm "PREVMCBLOCKS";
+
+;;; Returns a tuple containing information about the last 100 masterchain blocks.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   tuple: Tuple with info on the last 100 MC blocks.
+tuple get_last_mc_blocks_100() asm "PREVMCBLOCKS_100";
+
+;;; Returns a tuple containing information about the previous key block in the masterchain.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   tuple: Tuple with info on the previous key block.
+tuple get_prev_key_block() asm "PREVKEYBLOCK";
+
+;;; Unpacks a BlockId tuple into individual integer components.
+;;; The tuple is unpacked due to how FunC handles tuple assignments.
+;;;
+;;; Args:
+;;;   block_id (tuple): A tuple representing a BlockId.
+;;;
+;;; Returns:
+;;;   [int, int, int, int, int]:
+;;;     int: Workchain ID.
+;;;     int: Shard ID.
+;;;     int: Block sequence number.
+;;;     int: Root hash (uint256).
+;;;     int: File hash (uint256).
+[int, int, int, int, int] unpack_block_id(tuple block_id) asm "NOP"; ;; Renamed return type to match common usage
+
+;;; Returns the current global ID of the blockchain network.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   int: The global ID.
+int global_id() asm "GLOBALID";
+
+;;; Retrieves a specific configuration parameter from the blockchain's global configuration.
+;;; Returns the parameter's value as a cell, or null if the parameter doesn't exist.
+;;;
+;;; Args:
+;;;   x (int): The integer ID of the configuration parameter.
+;;;
+;;; Returns:
+;;;   cell: The cell containing the parameter's value, or null.
+cell config_param(int x) asm "CONFIGOPTPARAM";
+
+
+;; ██████╗ ███████╗ ██████╗ ██╗███████╗████████╗███████╗██████╗ ███████╗
+;; ██╔══██╗██╔════╝██╔════╝ ██║██╔════╝╚══██╔══╝██╔════╝██╔══██╗██╔════╝
+;; ██████╔╝█████╗  ██║  ███╗██║███████╗   ██║   █████╗  ██████╔╝███████╗
+;; ██╔══██╗██╔══╝  ██║   ██║██║╚════██║   ██║   ██╔══╝  ██╔══██╗╚════██║
+;; ██║  ██║███████╗╚██████╔╝██║███████║   ██║   ███████╗██║  ██║███████║
+;; ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝
+
+
+;;; Returns the current exception handler continuation stored in register c2.
+;;; The handler is a function of type ((int, int) -> ()).
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   ((int, int) -> ()): The exception handler continuation.
+((int, int) -> ()) get_exception_handler() asm "c2 PUSH";
+
+;;; Sets the exception handler continuation in register c2.
+;;; The handler will be called if an exception occurs.
+;;;
+;;; Args:
+;;;   c (((int, int) -> ())): The continuation to set as the exception handler.
+;;;
+;;; Returns:
+;;;   None
+() set_exception_handler(((int, int) -> ()) c) impure asm "c2 POP";
+
+;;; Returns the current continuation stored in register c3.
+;;; c3 usually holds the main code of the contract and is used for function calls.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   cont: The continuation from register c3.
+cont get_c3() asm "c3 PUSH";
+
+;;; Sets the continuation in register c3.
+;;; Can be used to update the smart contract code dynamically during runtime.
+;;; Subsequent function calls will use the code from the new continuation.
+;;;
+;;; Args:
+;;;   c (cont): The new continuation to set in c3.
+;;;
+;;; Returns:
+;;;   None
+() set_c3(cont c) impure asm "c3 POP";
+
+;;; Returns the persistent data cell of the smart contract, stored in register c4.
+;;; This cell holds the contract's state between transactions.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   cell: The persistent data cell from register c4.
+cell get_data() asm "c4 PUSH";
+
+;;; Sets the persistent data cell of the smart contract in register c4.
+;;; This updates the contract's state.
+;;;
+;;; Args:
+;;;   c (cell): The new data cell to store in c4.
+;;;
+;;; Returns:
+;;;   None
+() set_data(cell c) impure asm "c4 POP";
+
+;;; Stores the provided cell into register c5, which holds the list of outgoing actions (messages).
+;;;
+;;; Args:
+;;;   actions (cell): The cell containing the list of actions.
+;;;
+;;; Returns:
+;;;   None
+() set_actions(cell actions) impure asm "c5 POP";
+
+;;; Clears the list of outgoing actions by storing an empty cell into register c5.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   None
+() clean_actions() impure asm "<b b> PUSHREF c5 POP";
+
+;;; Creates an output action to change the smart contract's code.
+;;; The change takes effect after the current transaction successfully finishes.
+;;;
+;;; Args:
+;;;   new_code (cell): The cell containing the new contract code.
+;;;
+;;; Returns:
+;;;   None
+() set_code(cell new_code) impure asm "SETCODE";
+
+;;; Creates an output action to modify the smart contract's library collection.
+;;; It can add or remove a library specified by the code cell.
+;;;
+;;; Args:
+;;;   code (cell): The cell containing the library code.
+;;;   mode (int): Operation mode: 0=remove, 1=add private, 2=add public.
+;;;
+;;; Returns:
+;;;   None
+() set_library(cell code, int mode) impure asm "SETLIBCODE";
+
+;;; Commits the current state of registers c4 (persistent data) and c5 (actions).
+;;; This makes the current execution state considered successful, even if an exception
+;;; is thrown later in the computation phase. The saved state will be used.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   None
+() commit() impure asm "COMMIT";
+
+
+;; ██████╗  █████╗ ███╗   ██╗██████╗  ██████╗ ███╗   ███╗
+;; ██╔══██╗██╔══██╗████╗  ██║██╔══██╗██╔═══██╗████╗ ████║
+;; ██████╔╝███████║██╔██╗ ██║██║  ██║██║   ██║██╔████╔██║
+;; ██╔══██╗██╔══██║██║╚██╗██║██║  ██║██║   ██║██║╚██╔╝██║
+;; ██║  ██║██║  ██║██║ ╚████║██████╔╝╚██████╔╝██║ ╚═╝ ██║
+;; ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝ ╚═╝     ╚═╝
+
+
+;;; Generates a pseudo-random unsigned 256-bit integer.
+;;; Uses the current random seed, computes its SHA512 hash,
+;;; updates the seed with the first 256 bits of the hash, and returns the last 256 bits.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   int: A pseudo-random uint256.
+int random() asm "RANDU256";
+
+;;; Generates a pseudo-random integer within the specified range [0, range-1] (or [range, -1] if range < 0).
+;;; It generates a random uint256 and computes z = floor(x * range / 2^256).
+;;;
+;;; Args:
+;;;   range (int): The upper bound (exclusive if positive) or lower bound (inclusive if negative).
+;;;
+;;; Returns:
+;;;   int: A pseudo-random integer in the specified range.
+int rand(int range) asm "RAND";
+
+;;; Returns the current value of the pseudo-random number generator seed (an unsigned 256-bit integer).
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   int: The current random seed (uint256).
+int get_seed() asm "RANDSEED";
+
+;;; Sets the pseudo-random number generator seed to the provided unsigned 256-bit integer.
+;;;
+;;; Args:
+;;;   seed (int): The new seed value (uint256).
+;;;
+;;; Returns:
+;;;   None
+() set_seed(int seed) impure asm "SETRAND";
+
+;;; Mixes an unsigned 256-bit integer into the random seed.
+;;; The new seed becomes sha256(old_seed || x).
+;;;
+;;; Args:
+;;;   x (int): The integer value (uint256) to mix into the seed.
+;;;
+;;; Returns:
+;;;   None
+() randomize(int x) impure asm "ADDRAND";
+
+;;; Mixes the current transaction's logical time into the random seed.
+;;; Useful for ensuring different random sequences across different transactions within the same block.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   None
+() randomize_lt() impure asm "LTIME ADDRAND";
+
+
+;;  ██████╗ ██████╗ ███╗   ██╗████████╗██████╗  ██████╗ ██╗         ███████╗██╗      ██████╗ ██╗    ██╗
+;; ██╔════╝██╔═══██╗████╗  ██║╚══██╔══╝██╔══██╗██╔═══██╗██║         ██╔════╝██║     ██╔═══██╗██║    ██║
+;; ██║     ██║   ██║██╔██╗ ██║   ██║   ██████╔╝██║   ██║██║         █████╗  ██║     ██║   ██║██║ █╗ ██║
+;; ██║     ██║   ██║██║╚██╗██║   ██║   ██╔══██╗██║   ██║██║         ██╔══╝  ██║     ██║   ██║██║███╗██║
+;; ╚██████╗╚██████╔╝██║ ╚████║   ██║   ██║  ██║╚██████╔╝███████╗    ██║     ███████╗╚██████╔╝╚███╔███╔╝
+;;  ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝
+
+
+;;; Transforms a slice into a simple ordinary continuation.
+;;; The continuation's code becomes the slice, and its stack and savelist are empty.
+;;;
+;;; Args:
+;;;   s (slice): The slice containing the code for the new continuation.
+;;;
+;;; Returns:
+;;;   cont: The newly created continuation.
+cont bless(slice s) impure asm "BLESS";
+
+
+;; ██████╗ ███████╗██████╗ ██╗   ██╗ ██████╗
+;; ██╔══██╗██╔════╝██╔══██╗██║   ██║██╔════╝
+;; ██║  ██║█████╗  ██████╔╝██║   ██║██║  ███╗
+;; ██║  ██║██╔══╝  ██╔══██╗██║   ██║██║   ██║
+;; ██████╔╝███████╗██████╔╝╚██████╔╝╚██████╔╝
+;; ╚═════╝ ╚══════╝╚═════╝  ╚═════╝  ╚═════╝
+
+
+;;; Dumps the current state of the TVM stack to the debug log.
+;;; Shows at most the top 255 values and the total stack depth.
+;;; This is a debug primitive and does nothing in production versions of TVM.
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   None
+() dump_stack() impure asm "DUMPSTK";
+
+
+;; ███████╗██╗  ██╗████████╗██████╗  █████╗
+;; ██╔════╝╚██╗██╔╝╚══██╔══╝██╔══██╗██╔══██╗
+;; █████╗   ╚███╔╝    ██║   ██████╔╝███████║
+;; ██╔══╝   ██╔██╗    ██║   ██╔══██╗██╔══██║
+;; ███████╗██╔╝ ██╗   ██║   ██║  ██║██║  ██║
+;; ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝
+
+
+;;; Pushes the unique value null of TVM type Null onto the stack.
+;;; null is often used to represent absence of value or empty structures (like dictionaries).
+;;;
+;;; Args:
+;;;   None
+;;;
+;;; Returns:
+;;;   X: The null value (represented generically as type X).
+forall X -> X null() asm "PUSHNULL";
+
+;;; Marks a variable as "used" to prevent the compiler from optimizing away the code
+;;; that produces it, even if the variable itself isn't directly used later.
+;;; Useful for ensuring side effects of impure functions are not discarded.
+;;; Returns the original value to allow chaining operations.
+;;;
+;;; Args:
+;;;   x (X): The variable to touch (can be of any type X).
+;;;
+;;; Returns:
+;;;   X: The original value.
+forall X -> (X, ()) ~impure_touch(X x) impure asm "NOP";
