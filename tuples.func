@@ -1,4 +1,26 @@
 {-
+    This file is part of stdlib.func.
+    It is derived from code originally part of the TON Blockchain project.
+
+    stdlib.func is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    stdlib.func is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with stdlib.func (see the file LICENSE.LGPL). If not, see
+    <https://www.gnu.org/licenses/>. You should also have received a copy of
+    the GNU General Public License (see the file LICENSE.GPL), which is
+    referenced by the LGPL.
+-}
+
+
+{-
   # Lisp-style lists
 
   Lists can be represented as nested 2-elements tuples.
@@ -248,4 +270,3 @@ forall X, Y, Z -> Y triple_second([X, Y, Z] p) asm "SECOND";
 ;;; Returns:
 ;;;   Z: Third element of the triple.
 forall X, Y, Z -> Z triple_third([X, Y, Z] p) asm "THIRD";
-

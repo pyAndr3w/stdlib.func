@@ -1,4 +1,26 @@
-;; ██████╗ ██╗   ██╗██╗██╗     ██████╗ 
+{-
+    This file is part of stdlib.func.
+    It is derived from code originally part of the TON Blockchain project.
+
+    stdlib.func is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    stdlib.func is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with stdlib.func (see the file LICENSE.LGPL). If not, see
+    <https://www.gnu.org/licenses/>. You should also have received a copy of
+    the GNU General Public License (see the file LICENSE.GPL), which is
+    referenced by the LGPL.
+-}
+
+
+;; ██████╗ ██╗   ██╗██╗██╗     ██████╗
 ;; ██╔══██╗██║   ██║██║██║     ██╔══██╗
 ;; ██████╔╝██║   ██║██║██║     ██║  ██║
 ;; ██╔══██╗██║   ██║██║██║     ██║  ██║
@@ -270,6 +292,7 @@ builder store_number_hex(builder b, int x) asm """
 ;; ██╔═══╝ ██╔══██║██╔══██╗╚════██║██╔══╝  
 ;; ██║     ██║  ██║██║  ██║███████║███████╗
 ;; ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝
+
 
 ;;; Converts a cell into a slice for parsing.
 ;;; If the cell is exotic, it might be automatically loaded first.
@@ -660,6 +683,7 @@ int slice_check_bits_refs(slice s, int l, int r) asm "SCHKBITREFSQ";
 ;;;   slice: The remaining part of the slice.
 (slice, slice) slice_split(slice cs, int bits, int refs) asm(-> 1 0) "SPLIT";
 
+
 ;; ███████╗██╗███████╗███████╗
 ;; ██╔════╝██║╚══███╔╝██╔════╝
 ;; ███████╗██║  ███╔╝ █████╗  
@@ -736,6 +760,7 @@ int slice_check_bits_refs(slice s, int l, int r) asm "SCHKBITREFSQ";
 ;; ╚██████╗███████╗███████╗███████╗
 ;;  ╚═════╝╚══════╝╚══════╝╚══════╝
 
+
 ;;; Returns the depth of the cell.
 ;;; If the cell has no references, depth is 0. Otherwise, it's 1 plus the maximum depth of referenced cells.
 ;;; Returns 0 if the input is null.
@@ -775,4 +800,3 @@ int cell_level(cell c) asm "CLEVEL";
 ;;; Returns:
 ;;;   int: The level mask of the cell.
 int cell_level_mask(cell c) asm "CLEVELMASK";
-
